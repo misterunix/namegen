@@ -6,6 +6,11 @@ type firstname struct {
 }
 
 type lastname struct {
+	ID   int
+	Name string
+}
+
+type lastnameFreq struct {
 	ID       int
 	Name     string
 	Rank     int
@@ -15,4 +20,11 @@ type lastname struct {
 	Hispanic float64
 	Asian    float64
 	Indian   float64
+}
+
+type firstnameFreq struct {
+	ID         int
+	Name       string
+	Count      int
+	Percentage float64
 }

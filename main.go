@@ -37,6 +37,10 @@ func fileExists(filename string) bool {
 // Populate the database with the text from the files.
 // This is going to be a messy function and needs to be cleaned up.
 func populateDB() {
+
+	//var maleFreqCount int
+	//var femaleFreqCount int
+
 	ts := time.Now()
 	fmt.Println("\tPopulating the database.")
 	fmt.Println("\t\tFemale first names.")
@@ -102,6 +106,67 @@ func populateDB() {
 	}
 	readFile.Close()
 
+	fmt.Println("\t\tMale first names frequency.")
+	readFile, err = os.Open("storage/male-new-freq.txt")
+	_ = CheckErr(err, true)
+	fileScanner = bufio.NewScanner(readFile)
+	fileScanner.Split(bufio.ScanLines)
+	id = 0
+	for fileScanner.Scan() {
+
+		tmp := strings.TrimSpace(fileScanner.Text()) // remove spaces just in case
+		//split iy on tabs
+		sraw := strings.Split(tmp, "\t")
+		//fmt.Println(sraw)
+		fn := sraw[1]
+		fp, err := strconv.ParseFloat(sraw[2], 64)
+		_ = CheckErr(err, true)
+		fcb, err := strconv.ParseInt(sraw[3], 10, 0)
+		_ = CheckErr(err, true)
+		fc := int(fcb)
+		//maleFreqCount += fc
+		//var fp float64 = 0.0
+		fnm := firstnameFreq{ID: id, Name: fn, Percentage: fp, Count: fc} // create a firstname struct
+		sql := InsertIntoTable("malefreq", fnm)                           // create the sql statement
+		statement, err := db.Prepare(sql)
+		_ = CheckErr(err, true)
+		_, err = statement.Exec()
+		_ = CheckErr(err, true)
+		id++
+	}
+	readFile.Close()
+	fmt.Println("\t\tdone.")
+
+	fmt.Println("\t\tFemale first names frequency.")
+	readFile, err = os.Open("storage/female-new-freq.txt")
+	_ = CheckErr(err, true)
+	fileScanner = bufio.NewScanner(readFile)
+	fileScanner.Split(bufio.ScanLines)
+	id = 0
+	for fileScanner.Scan() {
+
+		tmp := strings.TrimSpace(fileScanner.Text()) // remove spaces just in case
+		//split iy on tabs
+		sraw := strings.Split(tmp, "\t")
+		fn := sraw[1]
+		fp, err := strconv.ParseFloat(sraw[2], 64)
+		_ = CheckErr(err, true)
+		fcb, err := strconv.ParseInt(sraw[3], 10, 0)
+		_ = CheckErr(err, true)
+		fc := int(fcb)
+		//femaleFreqCount += fc
+		//var fp float64 = 0.0
+		fnm := firstnameFreq{ID: id, Name: fn, Percentage: fp, Count: fc} // create a firstname struct
+		sql := InsertIntoTable("femalefreq", fnm)                         // create the sql statement
+		statement, err := db.Prepare(sql)
+		_ = CheckErr(err, true)
+		_, err = statement.Exec()
+		_ = CheckErr(err, true)
+		id++
+	}
+	readFile.Close()
+	fmt.Println("\t\tdone.")
+
 	o = "COMMIT;\n"
 	beginstatement, err = db.Prepare(o)
 	_ = CheckErr(err, true)
@@ -147,6 +212,8 @@ func main() {
 	var maleCount int
 	var femaleCount int
 	var lastNameCount int
+	var femalFreqCount int
+	var maleFreqCount int
 
 	rnd = rand.New(rand.NewSource(time.Now().UnixNano()))
 
@@ -221,14 +288,50 @@ func main() {
 		createnewdb = true
 	}
 
+	sql = "SELECT name FROM sqlite_master WHERE type='table' AND name='femalefreq';"
+	statement, err = db.Prepare(sql)
+	_ = CheckErr(err, true)
+	rows, err = statement.Query()
+	_ = CheckErr(err, true)
+	//var rc int
+	//var tmpstring string
+	for rows.Next() {
+		rc++
+		rows.Scan(&tmpstring)
+	}
+	fmt.Printf("female frequency table: %d\n", rc)
+	if rc == 0 {
+		createnewdb = true
+	}
+
+	sql = "SELECT name FROM sqlite_master WHERE type='table' AND name='malefreq';"
+	statement, err = db.Prepare(sql)
+	_ = CheckErr(err, true)
+	rows, err = statement.Query()
+	_ = CheckErr(err, true)
+	//var rc int
+	//var tmpstring string
+	for rows.Next() {
+		rc++
+		rows.Scan(&tmpstring)
+	}
+	fmt.Printf("male frequency table: %d\n", rc)
+	if rc == 0 {
+		createnewdb = true
+	}
+
 	if createnewdb {
 		fmt.Println("Creating a new database tables.")
 		DropTable(db, "firstnamefemale")
 		DropTable(db, "firstnamemale")
+		DropTable(db, "femalefreq")
+		DropTable(db, "malefreq")
 		DropTable(db, "lastname")
 		CreateDBtable(db, "firstnamefemale", firstname{})
 		CreateDBtable(db, "firstnamemale", firstname{})
 		CreateDBtable(db, "lastname", lastname{})
+		CreateDBtable(db, "femalefreq", firstnameFreq{})
+		CreateDBtable(db, "malefreq", firstnameFreq{})
 		populateDB()
 		fmt.Println("Done.")
 	}
@@ -236,10 +339,14 @@ func main() {
 	maleCount = checkTableCount("firstnamemale")
 	femaleCount = checkTableCount("firstnamefemale")
 	lastNameCount = checkTableCount("lastname")
+	femalFreqCount = checkTableCount("femalefreq")
+	maleFreqCount = checkTableCount("malefreq")
 
 	fmt.Printf("femaleCount: %d\n", femaleCount)
 	fmt.Printf("maleCount: %d\n", maleCount)
 	fmt.Printf("lastNameCount: %d\n\n", lastNameCount)
+	fmt.Printf("femaleFreqCount: %d\n", femalFreqCount)
+	fmt.Printf("maleFreqCount: %d\n\n", maleFreqCount)
 
 	for i := 0; i < 10; i++ {
 
