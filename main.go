@@ -119,15 +119,16 @@ func populateDB() {
 		sraw := strings.Split(tmp, "\t")
 		//fmt.Println(sraw)
 		fn := sraw[1]
-		fp, err := strconv.ParseFloat(sraw[2], 64)
-		_ = CheckErr(err, true)
+		//fp, err := strconv.ParseFloat(sraw[2], 64)
+		//_ = CheckErr(err, true)
+		fp := 0.0
 		fcb, err := strconv.ParseInt(sraw[3], 10, 0)
 		_ = CheckErr(err, true)
 		fc := int(fcb)
 		//maleFreqCount += fc
 		//var fp float64 = 0.0
-		fnm := firstnameFreq{ID: id, Name: fn, Percentage: fp, Count: fc} // create a firstname struct
-		sql := InsertIntoTable("malefreq", fnm)                           // create the sql statement
+		fnm := firstnameFreq{ID: id, Name: fn, Percentage: fp, Count: fc, AsString: sraw[2]} // create a firstname struct
+		sql := InsertIntoTable("malefreq", fnm)                                              // create the sql statement
 		statement, err := db.Prepare(sql)
 		_ = CheckErr(err, true)
 		_, err = statement.Exec()
@@ -149,15 +150,16 @@ func populateDB() {
 		//split iy on tabs
 		sraw := strings.Split(tmp, "\t")
 		fn := sraw[1]
-		fp, err := strconv.ParseFloat(sraw[2], 64)
-		_ = CheckErr(err, true)
+		//fp, err := strconv.ParseFloat(sraw[2], 64)
+		//_ = CheckErr(err, true)
+		fp := 0.0
 		fcb, err := strconv.ParseInt(sraw[3], 10, 0)
 		_ = CheckErr(err, true)
 		fc := int(fcb)
 		//femaleFreqCount += fc
 		//var fp float64 = 0.0
-		fnm := firstnameFreq{ID: id, Name: fn, Percentage: fp, Count: fc} // create a firstname struct
-		sql := InsertIntoTable("femalefreq", fnm)                         // create the sql statement
+		fnm := firstnameFreq{ID: id, Name: fn, Percentage: fp, Count: fc, AsString: sraw[2]} // create a firstname struct
+		sql := InsertIntoTable("femalefreq", fnm)                                            // create the sql statement
 		statement, err := db.Prepare(sql)
 		_ = CheckErr(err, true)
 		_, err = statement.Exec()
@@ -217,15 +219,11 @@ func main() {
 
 	rnd = rand.New(rand.NewSource(time.Now().UnixNano()))
 
-	createnewdb := false
-	doMale := false
-	doFemale := false
-	doLastName := false
-
 	flag.BoolVar(&createnewdb, "newdb", false, "Create a new database.")
 	flag.BoolVar(&doMale, "m", false, "Generate a male name.")
 	flag.BoolVar(&doFemale, "f", false, "Generate a female name.")
 	flag.BoolVar(&doLastName, "l", false, "Generate a last name.")
+	flag.BoolVar(&doPercent, "p", false, "Use the percentage tables.")
 	flag.Parse()
 
 	// Check if the DB exists. If not, create it.
@@ -348,54 +346,134 @@ func main() {
 	fmt.Printf("femaleFreqCount: %d\n", femalFreqCount)
 	fmt.Printf("maleFreqCount: %d\n\n", maleFreqCount)
 
-	for i := 0; i < 10; i++ {
+	// Load db into memory
+	fmt.Println("Loading database into memory.")
 
-		if doMale {
-			r := rnd.Intn(maleCount)
-			sql := "select name from firstnamemale where id = " + strconv.Itoa(r) + ";"
-			statement, err := db.Prepare(sql)
-			_ = CheckErr(err, true)
-			rows, err := statement.Query()
-			_ = CheckErr(err, true)
-			var name string
-			for rows.Next() {
-				rows.Scan(&name)
-			}
-			fmt.Print(name)
-			rows.Close()
+	fm := firstnameFreq{}
+	sqlfemale := "select * from femalefreq;"
+	statement, err = db.Prepare(sqlfemale)
+	_ = CheckErr(err, true)
+	rows, err = statement.Query()
+	_ = CheckErr(err, true)
+	var lastP float64 = 100.0
+	for rows.Next() {
+
+		rows.Scan(&fm.ID, &fm.Name, &fm.Count, &fm.Percentage, &fm.AsString)
+		fm.Percentage, err = strconv.ParseFloat(fm.AsString, 64)
+		_ = CheckErr(err, true)
+		fm.Percentage *= 100.0
+		fm.Percentage = lastP - fm.Percentage
+
+		mfn := ModifiedNameFreq{ID: fm.ID, Name: fm.Name, PercentageHigh: lastP, PercentageLow: fm.Percentage}
+		femaleNamesFreq = append(femaleNamesFreq, mfn)
+		lastP = fm.Percentage
+		if fm.Percentage < 0.0 {
+			fm.Percentage = 0.0
+		}
+	}
+	rows.Close()
+	statement.Close()
+
+	/*
+		fmt.Println("femaleNamesFreq")
+		for j, k := range femaleNamesFreq {
+			fmt.Println(j, k)
+		}
+	*/
+
+	fmm := firstnameFreq{}
+	sqlmale := "select * from malefreq;"
+	statement, err = db.Prepare(sqlmale)
+	_ = CheckErr(err, true)
+	rows, err = statement.Query()
+	_ = CheckErr(err, true)
+	lastP = 100.0
+	for rows.Next() {
+
+		rows.Scan(&fmm.ID, &fmm.Name, &fmm.Count, &fmm.Percentage, &fmm.AsString)
+		//fmt.Println(fmm)
+		fmm.Percentage, err = strconv.ParseFloat(fmm.AsString, 64)
+		_ = CheckErr(err, true)
+		fmm.Percentage *= 100.0
+		fmm.Percentage = lastP - fmm.Percentage
+
+		mfn := ModifiedNameFreq{ID: fmm.ID, Name: fmm.Name, PercentageHigh: lastP, PercentageLow: fmm.Percentage}
+		maleNamesFreq = append(maleNamesFreq, mfn)
+
+		lastP = fmm.Percentage
+		if fm.Percentage < 0.0 {
+			fm.Percentage = 0.0
 		}
 
-		if doFemale {
-			r := rnd.Intn(femaleCount)
-			sql := "select name from firstnamefemale where id = " + strconv.Itoa(r) + ";"
-			statement, err := db.Prepare(sql)
-			_ = CheckErr(err, true)
-			rows, err := statement.Query()
-			_ = CheckErr(err, true)
-			var name string
-			for rows.Next() {
-				rows.Scan(&name)
-			}
-			fmt.Print(name)
-			rows.Close()
-		}
+	}
+	rows.Close()
+	statement.Close()
 
-		if doLastName {
-			r := rnd.Intn(lastNameCount)
-			sql := "select name from lastname where id = " + strconv.Itoa(r) + ";"
-			statement, err := db.Prepare(sql)
-			_ = CheckErr(err, true)
-			rows, err := statement.Query()
-			_ = CheckErr(err, true)
-			var name string
-			for rows.Next() {
-				rows.Scan(&name)
+	/*
+		fmt.Println("maleNamesFreq")
+		for j, k := range maleNamesFreq {
+			fmt.Println(j, k)
+		}
+	*/
+	fmt.Println("Done.")
+
+	if doPercent {
+		getPercentName()
+	}
+
+	if !doPercent {
+
+		for i := 0; i < 10; i++ {
+
+			if doMale {
+				r := rnd.Intn(maleCount)
+				sql := "select name from firstnamemale where id = " + strconv.Itoa(r) + ";"
+				statement, err := db.Prepare(sql)
+				_ = CheckErr(err, true)
+				rows, err := statement.Query()
+				_ = CheckErr(err, true)
+				var name string
+				for rows.Next() {
+					rows.Scan(&name)
+				}
+				fmt.Print(name)
+				rows.Close()
 			}
-			if doMale || doFemale {
-				fmt.Print(" ")
+
+			if doFemale {
+				r := rnd.Intn(femaleCount)
+				sql := "select name from firstnamefemale where id = " + strconv.Itoa(r) + ";"
+				statement, err := db.Prepare(sql)
+				_ = CheckErr(err, true)
+				rows, err := statement.Query()
+				_ = CheckErr(err, true)
+				var name string
+				for rows.Next() {
+					rows.Scan(&name)
+				}
+				fmt.Print(name)
+				rows.Close()
 			}
-			fmt.Println(name)
-			rows.Close()
+
+			if doLastName {
+				r := rnd.Intn(lastNameCount)
+				sql := "select name from lastname where id = " + strconv.Itoa(r) + ";"
+				statement, err := db.Prepare(sql)
+				_ = CheckErr(err, true)
+				rows, err := statement.Query()
+				_ = CheckErr(err, true)
+				var name string
+				for rows.Next() {
+					rows.Scan(&name)
+				}
+				if doMale || doFemale {
+					fmt.Print(" ")
+				}
+				fmt.Println(name)
+				rows.Close()
+			} else {
+				fmt.Println()
+			}
 		}
 	}
 	defer db.Close()

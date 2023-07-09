@@ -27,4 +27,12 @@ type firstnameFreq struct {
 	Name       string
 	Count      int
 	Percentage float64
+	AsString   string
+}
+
+type ModifiedNameFreq struct {
+	ID             int
+	Name           string
+	PercentageHigh float64
+	PercentageLow  float64
 }
