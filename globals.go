@@ -17,3 +17,5 @@ var doMale bool
 var doFemale bool
 var doLastName bool
 var doPercent bool
+
+var nameGenCount int // the number of names to generate a name

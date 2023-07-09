@@ -224,6 +224,7 @@ func main() {
 	flag.BoolVar(&doFemale, "f", false, "Generate a female name.")
 	flag.BoolVar(&doLastName, "l", false, "Generate a last name.")
 	flag.BoolVar(&doPercent, "p", false, "Use the percentage tables.")
+	flag.IntVar(&nameGenCount, "c", 1, "The number of names to generate.")
 	flag.Parse()
 
 	// Check if the DB exists. If not, create it.
@@ -417,13 +418,13 @@ func main() {
 	*/
 	fmt.Println("Done.")
 
-	if doPercent {
-		getPercentName()
-	}
+	for i := 0; i < nameGenCount; i++ {
 
-	if !doPercent {
+		if doPercent {
+			getPercentName()
+		}
 
-		for i := 0; i < 10; i++ {
+		if !doPercent {
 
 			if doMale {
 				r := rnd.Intn(maleCount)
@@ -476,5 +477,6 @@ func main() {
 			}
 		}
 	}
+
 	defer db.Close()
 }
