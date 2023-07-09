@@ -211,9 +211,7 @@ func checkTableCount(table string) int {
 func main() {
 
 	var err error
-	var maleCount int
-	var femaleCount int
-	var lastNameCount int
+
 	var femalFreqCount int
 	var maleFreqCount int
 
@@ -419,63 +417,31 @@ func main() {
 	fmt.Println("Done.")
 
 	for i := 0; i < nameGenCount; i++ {
+		var firstName string
+		var lastName string
 
 		if doPercent {
-			getPercentName()
+			firstName = getPercentName()
 		}
 
 		if !doPercent {
 
 			if doMale {
-				r := rnd.Intn(maleCount)
-				sql := "select name from firstnamemale where id = " + strconv.Itoa(r) + ";"
-				statement, err := db.Prepare(sql)
-				_ = CheckErr(err, true)
-				rows, err := statement.Query()
-				_ = CheckErr(err, true)
-				var name string
-				for rows.Next() {
-					rows.Scan(&name)
-				}
-				fmt.Print(name)
-				rows.Close()
+				firstName = getMaleFirstname()
 			}
 
 			if doFemale {
-				r := rnd.Intn(femaleCount)
-				sql := "select name from firstnamefemale where id = " + strconv.Itoa(r) + ";"
-				statement, err := db.Prepare(sql)
-				_ = CheckErr(err, true)
-				rows, err := statement.Query()
-				_ = CheckErr(err, true)
-				var name string
-				for rows.Next() {
-					rows.Scan(&name)
-				}
-				fmt.Print(name)
-				rows.Close()
+				firstName = getFemaleFirstname()
 			}
 
-			if doLastName {
-				r := rnd.Intn(lastNameCount)
-				sql := "select name from lastname where id = " + strconv.Itoa(r) + ";"
-				statement, err := db.Prepare(sql)
-				_ = CheckErr(err, true)
-				rows, err := statement.Query()
-				_ = CheckErr(err, true)
-				var name string
-				for rows.Next() {
-					rows.Scan(&name)
-				}
-				if doMale || doFemale {
-					fmt.Print(" ")
-				}
-				fmt.Println(name)
-				rows.Close()
-			} else {
-				fmt.Println()
-			}
 		}
+
+		if doLastName {
+			lastName = getLastname()
+		}
+
+		fmt.Printf("%s %s\n", firstName, lastName)
+
 	}
 
 	defer db.Close()

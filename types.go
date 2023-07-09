@@ -30,6 +30,21 @@ type firstnameFreq struct {
 	AsString   string
 }
 
+type lastnamefreq struct {
+	ID           int
+	Name         string  // The surname
+	Rank         int     // OVerall rank
+	Count        int     // Number of occurrences
+	Prop100k     float64 // Proportion per 100,000
+	Cum_prop100k float64 // Cumulative proportion per 100,000
+	Pctwhite     float64 // Percent non-Hispanic white
+	Pctblack     float64 // Percent non-Hispanic black
+	Pctapi       float64 // Percent non-Hispanic Asian/Pacific Islander
+	Pctaian      float64 // Percent non-Hispanic American Indian/Alaska Native
+	Pct2prace    float64 // Percent dual race
+	Pcthispanic  float64 // Percent Hispanic
+}
+
 type ModifiedNameFreq struct {
 	ID             int
 	Name           string
