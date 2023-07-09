@@ -22,12 +22,19 @@ type lastnameFreq struct {
 	Indian   float64
 }
 
-type firstnameFreq struct {
+type nameFreq struct {
 	ID         int
 	Name       string
 	Count      int
 	Percentage float64
 	AsString   string
+}
+
+type lastNameSimpleFreq struct {
+	ID         int
+	Name       string
+	Count      int
+	Percentage float64
 }
 
 type lastnamefreq struct {

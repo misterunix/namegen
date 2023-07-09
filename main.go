@@ -127,8 +127,8 @@ func populateDB() {
 		fc := int(fcb)
 		//maleFreqCount += fc
 		//var fp float64 = 0.0
-		fnm := firstnameFreq{ID: id, Name: fn, Percentage: fp, Count: fc, AsString: sraw[2]} // create a firstname struct
-		sql := InsertIntoTable("malefreq", fnm)                                              // create the sql statement
+		fnm := nameFreq{ID: id, Name: fn, Percentage: fp, Count: fc, AsString: sraw[2]} // create a firstname struct
+		sql := InsertIntoTable("malefreq", fnm)                                         // create the sql statement
 		statement, err := db.Prepare(sql)
 		_ = CheckErr(err, true)
 		_, err = statement.Exec()
@@ -158,8 +158,60 @@ func populateDB() {
 		fc := int(fcb)
 		//femaleFreqCount += fc
 		//var fp float64 = 0.0
-		fnm := firstnameFreq{ID: id, Name: fn, Percentage: fp, Count: fc, AsString: sraw[2]} // create a firstname struct
-		sql := InsertIntoTable("femalefreq", fnm)                                            // create the sql statement
+		fnm := nameFreq{ID: id, Name: fn, Percentage: fp, Count: fc, AsString: sraw[2]} // create a firstname struct
+		sql := InsertIntoTable("femalefreq", fnm)                                       // create the sql statement
+		statement, err := db.Prepare(sql)
+		_ = CheckErr(err, true)
+		_, err = statement.Exec()
+		_ = CheckErr(err, true)
+		id++
+	}
+	readFile.Close()
+	fmt.Println("\t\tdone.")
+
+	// This needs to be done differently. The file is too big to load into memory.
+	fmt.Println("\t\tLastnames frequency.")
+	fmt.Println("\t\t\tGetting total from surnamefreq.txt")
+	readFile, err = os.Open("storage/surnamefreq.txt")
+	_ = CheckErr(err, true)
+	fileScanner = bufio.NewScanner(readFile)
+	fileScanner.Split(bufio.ScanLines)
+	id = 0
+	var totalCount int = 0
+	for fileScanner.Scan() {
+		tmp := strings.TrimSpace(fileScanner.Text()) // remove spaces just in case
+		sraw := strings.Split(tmp, ",")
+		//		fmt.Println(sraw)
+		ti, err := strconv.Atoi(sraw[2]) // Count, need to place in temp var because off error
+		_ = CheckErr(err, true)
+		totalCount += ti // Add to total count
+	}
+	readFile.Close()
+	fmt.Println("\t\t\tdone.")
+
+	readFile, err = os.Open("storage/surnamefreq.txt")
+	_ = CheckErr(err, true)
+	fileScanner = bufio.NewScanner(readFile)
+	fileScanner.Split(bufio.ScanLines)
+	id = 0
+	var lastP float64 = 100.0
+	for fileScanner.Scan() {
+		mnf := ModifiedNameFreq{}
+		tmp := strings.TrimSpace(fileScanner.Text()) // remove spaces just in case
+		sraw := strings.Split(tmp, ",")              // Split it on tabs
+		mnf.ID = id                                  // id
+		mnf.Name = sraw[0]                           // surname
+		tmpcount, err := strconv.Atoi(sraw[2])       // Count
+		_ = CheckErr(err, true)
+		tpercent := float64(tmpcount) / float64(totalCount) // Percentage
+		tpercent *= 100.0
+		mnf.PercentageHigh = lastP   // High percentage
+		mnf.PercentageLow = tpercent // Low percentage
+		lastP = tpercent             // Set lastP to current percentage
+		if lastP < 0.0 {             // If lastP is less than 0.0
+			lastP = 0.0 // Set it to 0.0
+		}
+		sql := InsertIntoTable("lastFreq", mnf) // create the sql statement
 		statement, err := db.Prepare(sql)
 		_ = CheckErr(err, true)
 		_, err = statement.Exec()
@@ -324,11 +376,13 @@ func main() {
 		DropTable(db, "femalefreq")
 		DropTable(db, "malefreq")
 		DropTable(db, "lastname")
+		DropTable(db, "lastFreq")
 		CreateDBtable(db, "firstnamefemale", firstname{})
 		CreateDBtable(db, "firstnamemale", firstname{})
 		CreateDBtable(db, "lastname", lastname{})
-		CreateDBtable(db, "femalefreq", firstnameFreq{})
-		CreateDBtable(db, "malefreq", firstnameFreq{})
+		CreateDBtable(db, "femalefreq", nameFreq{})
+		CreateDBtable(db, "malefreq", nameFreq{})
+		CreateDBtable(db, "lastFreq", ModifiedNameFreq{})
 		populateDB()
 		fmt.Println("Done.")
 	}
@@ -348,7 +402,7 @@ func main() {
 	// Load db into memory
 	fmt.Println("Loading database into memory.")
 
-	fm := firstnameFreq{}
+	fm := nameFreq{}
 	sqlfemale := "select * from femalefreq;"
 	statement, err = db.Prepare(sqlfemale)
 	_ = CheckErr(err, true)
@@ -380,7 +434,7 @@ func main() {
 		}
 	*/
 
-	fmm := firstnameFreq{}
+	fmm := nameFreq{}
 	sqlmale := "select * from malefreq;"
 	statement, err = db.Prepare(sqlmale)
 	_ = CheckErr(err, true)
@@ -440,7 +494,15 @@ func main() {
 			lastName = getLastname()
 		}
 
-		fmt.Printf("%s %s\n", firstName, lastName)
+		if (doMale || doFemale) && doLastName {
+			fmt.Printf("%s %s\n", firstName, lastName)
+		}
+		if (doMale || doFemale) && !doLastName {
+			fmt.Printf("%s\n", firstName)
+		}
+		if !doMale && !doFemale && doLastName {
+			fmt.Printf("%s\n", lastName)
+		}
 
 	}
 
