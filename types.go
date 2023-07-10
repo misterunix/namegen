@@ -52,6 +52,13 @@ type lastnamefreq struct {
 	Pcthispanic  float64 // Percent Hispanic
 }
 
+type lastnamefreq2 struct {
+	ID   int
+	Name string // The surname
+	PH   string
+	PL   string
+}
+
 type ModifiedNameFreq struct {
 	ID             int
 	Name           string

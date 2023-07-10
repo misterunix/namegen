@@ -170,57 +170,59 @@ func populateDB() {
 	fmt.Println("\t\tdone.")
 
 	// This needs to be done differently. The file is too big to load into memory.
-	fmt.Println("\t\tLastnames frequency.")
-	fmt.Println("\t\t\tGetting total from surnamefreq.txt")
-	readFile, err = os.Open("storage/surnamefreq.txt")
-	_ = CheckErr(err, true)
-	fileScanner = bufio.NewScanner(readFile)
-	fileScanner.Split(bufio.ScanLines)
-	id = 0
-	var totalCount int = 0
-	for fileScanner.Scan() {
-		tmp := strings.TrimSpace(fileScanner.Text()) // remove spaces just in case
-		sraw := strings.Split(tmp, ",")
-		//		fmt.Println(sraw)
-		ti, err := strconv.Atoi(sraw[2]) // Count, need to place in temp var because off error
+	loadSurnamesFromFile()
+	/*
+		fmt.Println("\t\tLastnames frequency.")
+		fmt.Println("\t\t\tGetting total from surnamefreq.txt")
+		readFile, err = os.Open("storage/surnamefreq.txt")
 		_ = CheckErr(err, true)
-		totalCount += ti // Add to total count
-	}
-	readFile.Close()
-	fmt.Println("\t\t\tdone.")
-
-	readFile, err = os.Open("storage/surnamefreq.txt")
-	_ = CheckErr(err, true)
-	fileScanner = bufio.NewScanner(readFile)
-	fileScanner.Split(bufio.ScanLines)
-	id = 0
-	var lastP float64 = 100.0
-	for fileScanner.Scan() {
-		mnf := ModifiedNameFreq{}
-		tmp := strings.TrimSpace(fileScanner.Text()) // remove spaces just in case
-		sraw := strings.Split(tmp, ",")              // Split it on tabs
-		mnf.ID = id                                  // id
-		mnf.Name = sraw[0]                           // surname
-		tmpcount, err := strconv.Atoi(sraw[2])       // Count
-		_ = CheckErr(err, true)
-		tpercent := float64(tmpcount) / float64(totalCount) // Percentage
-		tpercent *= 100.0
-		mnf.PercentageHigh = lastP   // High percentage
-		mnf.PercentageLow = tpercent // Low percentage
-		lastP = tpercent             // Set lastP to current percentage
-		if lastP < 0.0 {             // If lastP is less than 0.0
-			lastP = 0.0 // Set it to 0.0
+		fileScanner = bufio.NewScanner(readFile)
+		fileScanner.Split(bufio.ScanLines)
+		id = 0
+		var totalCount int = 0
+		for fileScanner.Scan() {
+			tmp := strings.TrimSpace(fileScanner.Text()) // remove spaces just in case
+			sraw := strings.Split(tmp, ",")
+			//		fmt.Println(sraw)
+			ti, err := strconv.Atoi(sraw[2]) // Count, need to place in temp var because off error
+			_ = CheckErr(err, true)
+			totalCount += ti // Add to total count
 		}
-		sql := InsertIntoTable("lastFreq", mnf) // create the sql statement
-		statement, err := db.Prepare(sql)
-		_ = CheckErr(err, true)
-		_, err = statement.Exec()
-		_ = CheckErr(err, true)
-		id++
-	}
-	readFile.Close()
-	fmt.Println("\t\tdone.")
+		readFile.Close()
+		fmt.Println("\t\t\tdone.")
 
+		readFile, err = os.Open("storage/surnamefreq.txt")
+		_ = CheckErr(err, true)
+		fileScanner = bufio.NewScanner(readFile)
+		fileScanner.Split(bufio.ScanLines)
+		id = 0
+		var lastP float64 = 100.0
+		for fileScanner.Scan() {
+			mnf := ModifiedNameFreq{}
+			tmp := strings.TrimSpace(fileScanner.Text()) // remove spaces just in case
+			sraw := strings.Split(tmp, ",")              // Split it on tabs
+			mnf.ID = id                                  // id
+			mnf.Name = sraw[0]                           // surname
+			tmpcount, err := strconv.Atoi(sraw[2])       // Count
+			_ = CheckErr(err, true)
+			tpercent := float64(tmpcount) / float64(totalCount) // Percentage
+			tpercent *= 100.0
+			mnf.PercentageHigh = lastP   // High percentage
+			mnf.PercentageLow = tpercent // Low percentage
+			lastP = tpercent             // Set lastP to current percentage
+			if lastP < 0.0 {             // If lastP is less than 0.0
+				lastP = 0.0 // Set it to 0.0
+			}
+			sql := InsertIntoTable("lastFreq", mnf) // create the sql statement
+			statement, err := db.Prepare(sql)
+			_ = CheckErr(err, true)
+			_, err = statement.Exec()
+			_ = CheckErr(err, true)
+			id++
+		}
+		readFile.Close()
+		fmt.Println("\t\tdone.")
+	*/
 	o = "COMMIT;\n"
 	beginstatement, err = db.Prepare(o)
 	_ = CheckErr(err, true)
@@ -275,6 +277,7 @@ func main() {
 	flag.BoolVar(&doLastName, "l", false, "Generate a last name.")
 	flag.BoolVar(&doPercent, "p", false, "Use the percentage tables.")
 	flag.IntVar(&nameGenCount, "c", 1, "The number of names to generate.")
+	flag.IntVar(&surnameLimit, "sl", 4000, "The number of surnames to load into the database.\n\t -1=no limit.\n")
 	flag.Parse()
 
 	// Check if the DB exists. If not, create it.
@@ -376,15 +379,16 @@ func main() {
 		DropTable(db, "femalefreq")
 		DropTable(db, "malefreq")
 		DropTable(db, "lastname")
-		DropTable(db, "lastFreq")
+		DropTable(db, "surnames")
 		CreateDBtable(db, "firstnamefemale", firstname{})
 		CreateDBtable(db, "firstnamemale", firstname{})
 		CreateDBtable(db, "lastname", lastname{})
 		CreateDBtable(db, "femalefreq", nameFreq{})
 		CreateDBtable(db, "malefreq", nameFreq{})
-		CreateDBtable(db, "lastFreq", ModifiedNameFreq{})
+		CreateDBtable(db, "surnames", lastnamefreq2{})
 		populateDB()
 		fmt.Println("Done.")
+		os.Exit(0)
 	}
 
 	maleCount = checkTableCount("firstnamemale")
@@ -462,12 +466,33 @@ func main() {
 	rows.Close()
 	statement.Close()
 
-	/*
-		fmt.Println("maleNamesFreq")
-		for j, k := range maleNamesFreq {
+	snf := lastnamefreq2{}
+	sqlsurname := "select * from surnames;"
+	statement, err = db.Prepare(sqlsurname)
+	_ = CheckErr(err, true)
+	rows, err = statement.Query()
+	_ = CheckErr(err, true)
+	for rows.Next() {
+		msnf := ModifiedNameFreq{}
+
+		rows.Scan(&snf.ID, &snf.Name, &snf.PH, &snf.PL)
+		msnf.ID = snf.ID
+		msnf.Name = snf.Name
+		msnf.PercentageHigh, err = strconv.ParseFloat(snf.PH, 64)
+		_ = CheckErr(err, true)
+		msnf.PercentageLow, err = strconv.ParseFloat(snf.PL, 64)
+		_ = CheckErr(err, true)
+		surnameFreq = append(surnameFreq, msnf)
+	}
+	rows.Close()
+	statement.Close()
+
+	/*	fmt.Println("surnamesFreq")
+		for j, k := range surnameFreq {
 			fmt.Println(j, k)
 		}
 	*/
+
 	fmt.Println("Done.")
 
 	for i := 0; i < nameGenCount; i++ {
