@@ -18,4 +18,4 @@
 bin/*
 
 #db
-db/*
+db/*.db
