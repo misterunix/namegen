@@ -17,3 +17,5 @@ The database _sqlite_ is in the direcory db/ from the root of where the program 
 A count of generated names can be set as well.
 
 Use the -h to see the current list of options.
+
+Added README.md to all directories so they will store in git.
