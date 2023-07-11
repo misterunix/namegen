@@ -15,7 +15,9 @@
 # vendor/
 
 #bin
+
 bin/*
+!bin/README.md
 
 #db
 db/*.db
