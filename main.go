@@ -144,8 +144,8 @@ func main() {
 
 	var err error
 
-	var femalFreqCount int
-	var maleFreqCount int
+	//var femalFreqCount int
+	//var maleFreqCount int
 
 	rnd = rand.New(rand.NewSource(time.Now().UnixNano()))
 
@@ -201,14 +201,17 @@ func main() {
 	maleCount = checkTableCount("firstnamemale")
 	femaleCount = checkTableCount("firstnamefemale")
 	lastNameCount = checkTableCount("lastname")
-	femalFreqCount = checkTableCount("femalefreq")
-	maleFreqCount = checkTableCount("malefreq")
+	// femalFreqCount = checkTableCount("femalefreq")
+	// maleFreqCount = checkTableCount("malefreq")
 
-	fmt.Printf("femaleCount: %d\n", femaleCount)
-	fmt.Printf("maleCount: %d\n", maleCount)
-	fmt.Printf("lastNameCount: %d\n\n", lastNameCount)
-	fmt.Printf("femaleFreqCount: %d\n", femalFreqCount)
-	fmt.Printf("maleFreqCount: %d\n\n", maleFreqCount)
+	/*
+		// This isnt really needed anymore.
+		fmt.Printf("femaleCount: %d\n", femaleCount)
+		fmt.Printf("maleCount: %d\n", maleCount)
+		fmt.Printf("lastNameCount: %d\n\n", lastNameCount)
+		fmt.Printf("femaleFreqCount: %d\n", femalFreqCount)
+		fmt.Printf("maleFreqCount: %d\n\n", maleFreqCount)
+	*/
 
 	// Load db into memory
 	fmt.Println("Loading database into memory.")
