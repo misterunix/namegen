@@ -170,79 +170,14 @@ func main() {
 	db.Ping()
 	_ = CheckErr(err, true)
 
-	sql := "SELECT name FROM sqlite_master WHERE type='table' AND name='firstnamefemale';"
-	statement, err := db.Prepare(sql)
-	_ = CheckErr(err, true)
-	rows, err := statement.Query()
-	_ = CheckErr(err, true)
-	var rc int
-	var tmpstring string
-	for rows.Next() {
-		rc++
-		rows.Scan(&tmpstring)
-	}
-	fmt.Printf("female table: %d\n", rc)
-	if rc == 0 {
-		createnewdb = true
-	}
-
-	sql = "SELECT name FROM sqlite_master WHERE type='table' AND name='firstnamemale';"
-	statement, err = db.Prepare(sql)
-	_ = CheckErr(err, true)
-	rows, err = statement.Query()
-	_ = CheckErr(err, true)
-	rc = 0
-	for rows.Next() {
-		rc++
-		rows.Scan(&tmpstring)
-	}
-	fmt.Printf("male table: %d\n", rc)
-	if rc == 0 {
-		createnewdb = true
-	}
-
-	sql = "SELECT name FROM sqlite_master WHERE type='table' AND name='lastname';"
-	statement, err = db.Prepare(sql)
-	_ = CheckErr(err, true)
-	rows, err = statement.Query()
-	_ = CheckErr(err, true)
-	rc = 0
-	for rows.Next() {
-		rc++
-		rows.Scan(&tmpstring)
-	}
-	fmt.Printf("lastname table: %d\n", rc)
-	if rc == 0 {
-		createnewdb = true
-	}
-
-	sql = "SELECT name FROM sqlite_master WHERE type='table' AND name='femalefreq';"
-	statement, err = db.Prepare(sql)
-	_ = CheckErr(err, true)
-	rows, err = statement.Query()
-	_ = CheckErr(err, true)
-	for rows.Next() {
-		rc++
-		rows.Scan(&tmpstring)
-	}
-	fmt.Printf("female frequency table: %d\n", rc)
-	if rc == 0 {
-		createnewdb = true
-	}
-
-	sql = "SELECT name FROM sqlite_master WHERE type='table' AND name='malefreq';"
-	statement, err = db.Prepare(sql)
-	_ = CheckErr(err, true)
-	rows, err = statement.Query()
-	_ = CheckErr(err, true)
-	for rows.Next() {
-		rc++
-		rows.Scan(&tmpstring)
-	}
-	fmt.Printf("male frequency table: %d\n", rc)
-	if rc == 0 {
-		createnewdb = true
-	}
+	// Check to see if all the table exists. If not, create new db. Should really only create
+	// the tables that are missing. Maybe later.
+	checkIfTableExists("firstnamefemale")
+	checkIfTableExists("firstnamemale")
+	checkIfTableExists("lastname")
+	checkIfTableExists("femalefreq")
+	checkIfTableExists("malefreq")
+	checkIfTableExists("surnames")
 
 	if createnewdb {
 		fmt.Println("Creating a new database tables.")
@@ -280,9 +215,9 @@ func main() {
 
 	fm := nameFreq{}
 	sqlfemale := "select * from femalefreq;"
-	statement, err = db.Prepare(sqlfemale)
+	statement, err := db.Prepare(sqlfemale)
 	_ = CheckErr(err, true)
-	rows, err = statement.Query()
+	rows, err := statement.Query()
 	_ = CheckErr(err, true)
 	var lastP float64 = 100.0
 	for rows.Next() {

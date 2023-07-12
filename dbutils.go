@@ -29,3 +29,25 @@ func readFileGenericAdd(f string, t string) {
 	}
 	readFile.Close()
 }
+
+// Check if a table exists. Sets createnewdb to true if it does not
+func checkIfTableExists(t string) {
+	sql := "SELECT name FROM sqlite_master WHERE type='table' AND name='" + t + "';"
+	statement, err := db.Prepare(sql)
+	_ = CheckErr(err, true)
+	rows, err := statement.Query()
+	_ = CheckErr(err, true)
+	var rc int
+	var tmpstring string
+	for rows.Next() {
+		rc++
+		rows.Scan(&tmpstring)
+	}
+	rows.Close()
+	statement.Close()
+	if rc == 0 {
+		fmt.Println("Table:", t, "does not exist. Creating a new DB with defaults.")
+		createnewdb = true
+	}
+
+}
