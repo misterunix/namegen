@@ -14,26 +14,6 @@ import (
 	_ "github.com/glebarez/go-sqlite"
 )
 
-func CheckErr(err error, fatal bool) error {
-	if err != nil {
-		fmt.Fprintln(os.Stderr, err)
-		if fatal {
-			os.Exit(1)
-		}
-	}
-	return err
-}
-
-// fileExists checks if a file exists and is not a directory before we
-// try using it to prevent further errors.
-func fileExists(filename string) bool {
-	info, err := os.Stat(filename)
-	if os.IsNotExist(err) {
-		return false
-	}
-	return !info.IsDir()
-}
-
 // Populate the database with the text from the files.
 // This is going to be a messy function and needs to be cleaned up.
 func populateDB() {
