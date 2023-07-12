@@ -1,5 +1,10 @@
 package main
 
+type genericName struct {
+	ID   int
+	Name string
+}
+
 type firstname struct {
 	ID   int
 	Name string

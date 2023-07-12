@@ -31,67 +31,79 @@ func populateDB() {
 	_, err = beginstatement.Exec()
 	_ = CheckErr(err, true)
 
-	readFile, err := os.Open("storage/first-f.txt")
+	readFileGenericAdd("storage/first-f.txt", "firstnamefemale")
+
+	/*
+		readFile, err := os.Open("storage/first-f.txt")
+		_ = CheckErr(err, true)
+		fileScanner := bufio.NewScanner(readFile)
+		fileScanner.Split(bufio.ScanLines)
+		var id int = 0
+		for fileScanner.Scan() {
+			tmp := strings.TrimSpace(fileScanner.Text())   // remove spaces just in case
+			fnf := firstname{id, tmp}                      // create a firstname struct
+			sql := InsertIntoTable("firstnamefemale", fnf) // create the sql statement
+			statement, err := db.Prepare(sql)
+			_ = CheckErr(err, true)
+			_, err = statement.Exec()
+			_ = CheckErr(err, true)
+			id++
+		}
+		readFile.Close()
+		fmt.Println("\t\tdone.")
+	*/
+
+	readFileGenericAdd("storage/first-m.txt", "firstnamemale")
+
+	/*
+		fmt.Println("\t\tMale first names.")
+		readFile, err = os.Open("storage/first-m.txt")
+		_ = CheckErr(err, true)
+		fileScanner = bufio.NewScanner(readFile)
+		fileScanner.Split(bufio.ScanLines)
+		id = 0
+		for fileScanner.Scan() {
+			tmp := strings.TrimSpace(fileScanner.Text()) // remove spaces just in case
+			fnm := firstname{id, tmp}                    // create a firstname struct
+			sql := InsertIntoTable("firstnamemale", fnm) // create the sql statement
+			statement, err := db.Prepare(sql)
+			_ = CheckErr(err, true)
+			_, err = statement.Exec()
+			_ = CheckErr(err, true)
+			id++
+		}
+		readFile.Close()
+		fmt.Println("\t\tdone.")
+	*/
+
+	readFileGenericAdd("storage/last.txt", "lastname")
+
+	/*
+		fmt.Println("\t\tLast names.")
+		readFile, err = os.Open("storage/last.txt")
+		_ = CheckErr(err, true)
+		fileScanner = bufio.NewScanner(readFile)
+		fileScanner.Split(bufio.ScanLines)
+		id = 0
+		for fileScanner.Scan() {
+			tmp := strings.TrimSpace(fileScanner.Text()) // remove spaces just in case
+			lastname := firstname{id, tmp}               // create a firstname struct
+			sql := InsertIntoTable("lastname", lastname) // create the sql statement
+			statement, err := db.Prepare(sql)
+			_ = CheckErr(err, true)
+			_, err = statement.Exec()
+			_ = CheckErr(err, true)
+			id++
+		}
+		readFile.Close()
+	*/
+
+	fmt.Println("\t\tMale first names frequency.")
+	readFile, err := os.Open("storage/male-new-freq.txt")
 	_ = CheckErr(err, true)
 	fileScanner := bufio.NewScanner(readFile)
 	fileScanner.Split(bufio.ScanLines)
-	var id int = 0
-	for fileScanner.Scan() {
-		tmp := strings.TrimSpace(fileScanner.Text())   // remove spaces just in case
-		fnf := firstname{id, tmp}                      // create a firstname struct
-		sql := InsertIntoTable("firstnamefemale", fnf) // create the sql statement
-		statement, err := db.Prepare(sql)
-		_ = CheckErr(err, true)
-		_, err = statement.Exec()
-		_ = CheckErr(err, true)
-		id++
-	}
-	readFile.Close()
-	fmt.Println("\t\tdone.")
-
-	fmt.Println("\t\tMale first names.")
-	readFile, err = os.Open("storage/first-m.txt")
-	_ = CheckErr(err, true)
-	fileScanner = bufio.NewScanner(readFile)
-	fileScanner.Split(bufio.ScanLines)
-	id = 0
-	for fileScanner.Scan() {
-		tmp := strings.TrimSpace(fileScanner.Text()) // remove spaces just in case
-		fnm := firstname{id, tmp}                    // create a firstname struct
-		sql := InsertIntoTable("firstnamemale", fnm) // create the sql statement
-		statement, err := db.Prepare(sql)
-		_ = CheckErr(err, true)
-		_, err = statement.Exec()
-		_ = CheckErr(err, true)
-		id++
-	}
-	readFile.Close()
-	fmt.Println("\t\tdone.")
-
-	fmt.Println("\t\tLast names.")
-	readFile, err = os.Open("storage/last.txt")
-	_ = CheckErr(err, true)
-	fileScanner = bufio.NewScanner(readFile)
-	fileScanner.Split(bufio.ScanLines)
-	id = 0
-	for fileScanner.Scan() {
-		tmp := strings.TrimSpace(fileScanner.Text()) // remove spaces just in case
-		lastname := firstname{id, tmp}               // create a firstname struct
-		sql := InsertIntoTable("lastname", lastname) // create the sql statement
-		statement, err := db.Prepare(sql)
-		_ = CheckErr(err, true)
-		_, err = statement.Exec()
-		_ = CheckErr(err, true)
-		id++
-	}
-	readFile.Close()
-
-	fmt.Println("\t\tMale first names frequency.")
-	readFile, err = os.Open("storage/male-new-freq.txt")
-	_ = CheckErr(err, true)
-	fileScanner = bufio.NewScanner(readFile)
-	fileScanner.Split(bufio.ScanLines)
-	id = 0
+	id := 0
 	for fileScanner.Scan() {
 
 		tmp := strings.TrimSpace(fileScanner.Text()) // remove spaces just in case

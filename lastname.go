@@ -22,9 +22,11 @@ func getLastname() string {
 		for rows.Next() {
 			rows.Scan(&name)
 		}
-		if doMale || doFemale {
-			fmt.Print(" ")
-		}
+		/*
+			if doMale || doFemale {
+				fmt.Print(" ")
+			}
+		*/
 		rows.Close()
 		statement.Close()
 		name = strings.ToUpper(name)
