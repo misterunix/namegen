@@ -156,6 +156,7 @@ func main() {
 	flag.BoolVar(&doPercent, "p", false, "Use the percentage tables.")
 	flag.IntVar(&nameGenCount, "c", 1, "The number of names to generate.")
 	flag.IntVar(&surnameLimit, "sl", 4000, "The number of surnames to load into the database.\n\t -1=no limit.\n")
+	flag.BoolVar(&doMiddleInt, "mi", false, "Generate a middle initial.")
 	flag.Parse()
 
 	// Check if the DB exists. If not, create it.
@@ -203,6 +204,8 @@ func main() {
 	lastNameCount = checkTableCount("lastname")
 	// femalFreqCount = checkTableCount("femalefreq")
 	// maleFreqCount = checkTableCount("malefreq")
+
+	middleInt = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
 
 	/*
 		// This isnt really needed anymore.
@@ -293,8 +296,9 @@ func main() {
 	fmt.Println("Done.")
 
 	for i := 0; i < nameGenCount; i++ {
-		var firstName string
-		var lastName string
+		var firstName string = ""
+		var lastName string = ""
+		var middleInitial string = ""
 
 		if doPercent {
 			firstName = getPercentName()
@@ -314,6 +318,15 @@ func main() {
 
 		if doLastName {
 			lastName = getLastname()
+		}
+
+		if doMiddleInt {
+			rn := rnd.Intn(26)
+			middleInitial = middleInt[rn : rn+1]
+		}
+
+		if (doMale || doFemale) && doLastName && doMiddleInt {
+			fmt.Printf("%s %s. %s\n", firstName, middleInitial, lastName)
 		}
 
 		if (doMale || doFemale) && doLastName {
