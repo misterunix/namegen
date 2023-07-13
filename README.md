@@ -1,5 +1,26 @@
 # namegen
 
+Thank you for looking at this little utility I call namegen.
+
+namegen can generate male/female, middle initial, and last name/surname.
+
+Each option has a different dataset depending on which option is selected.
+
+The current options as of this writing are:  
+**-h** help  
+**-newdb** generates a new database  
+**-sl** the number of surnames to load from the surname frequency set. Only used when creating a new database.  
+**-c num** how many names to generate.  
+**-p** user the frequency tables  
+**-f** generate female first names  
+**-m** generate male first names  
+**-mi** pick a middle initial randomly  
+**-l** pick a last name  
+
+
+----
+Older readme
+
 The start of a name generator. 
 
 The code is very messy but working so far:
