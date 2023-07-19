@@ -159,6 +159,8 @@ func main() {
 	flag.BoolVar(&doMiddleInt, "mi", false, "Generate a middle initial.")
 	flag.Parse()
 
+	startWebServer()
+
 	// Check if the DB exists. If not, create it.
 	if !fileExists("db/names.db") {
 		fmt.Println("Database does not exist. Creating a new one.")
