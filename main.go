@@ -14,26 +14,6 @@ import (
 	_ "github.com/glebarez/go-sqlite"
 )
 
-func CheckErr(err error, fatal bool) error {
-	if err != nil {
-		fmt.Fprintln(os.Stderr, err)
-		if fatal {
-			os.Exit(1)
-		}
-	}
-	return err
-}
-
-// fileExists checks if a file exists and is not a directory before we
-// try using it to prevent further errors.
-func fileExists(filename string) bool {
-	info, err := os.Stat(filename)
-	if os.IsNotExist(err) {
-		return false
-	}
-	return !info.IsDir()
-}
-
 // Populate the database with the text from the files.
 // This is going to be a messy function and needs to be cleaned up.
 func populateDB() {
@@ -51,67 +31,18 @@ func populateDB() {
 	_, err = beginstatement.Exec()
 	_ = CheckErr(err, true)
 
-	readFile, err := os.Open("storage/first-f.txt")
+	readFileGenericAdd("storage/first-f.txt", "firstnamefemale")
+
+	readFileGenericAdd("storage/first-m.txt", "firstnamemale")
+
+	readFileGenericAdd("storage/last.txt", "lastname")
+
+	fmt.Println("\t\tMale first names frequency.")
+	readFile, err := os.Open("storage/male-new-freq.txt")
 	_ = CheckErr(err, true)
 	fileScanner := bufio.NewScanner(readFile)
 	fileScanner.Split(bufio.ScanLines)
-	var id int = 0
-	for fileScanner.Scan() {
-		tmp := strings.TrimSpace(fileScanner.Text())   // remove spaces just in case
-		fnf := firstname{id, tmp}                      // create a firstname struct
-		sql := InsertIntoTable("firstnamefemale", fnf) // create the sql statement
-		statement, err := db.Prepare(sql)
-		_ = CheckErr(err, true)
-		_, err = statement.Exec()
-		_ = CheckErr(err, true)
-		id++
-	}
-	readFile.Close()
-	fmt.Println("\t\tdone.")
-
-	fmt.Println("\t\tMale first names.")
-	readFile, err = os.Open("storage/first-m.txt")
-	_ = CheckErr(err, true)
-	fileScanner = bufio.NewScanner(readFile)
-	fileScanner.Split(bufio.ScanLines)
-	id = 0
-	for fileScanner.Scan() {
-		tmp := strings.TrimSpace(fileScanner.Text()) // remove spaces just in case
-		fnm := firstname{id, tmp}                    // create a firstname struct
-		sql := InsertIntoTable("firstnamemale", fnm) // create the sql statement
-		statement, err := db.Prepare(sql)
-		_ = CheckErr(err, true)
-		_, err = statement.Exec()
-		_ = CheckErr(err, true)
-		id++
-	}
-	readFile.Close()
-	fmt.Println("\t\tdone.")
-
-	fmt.Println("\t\tLast names.")
-	readFile, err = os.Open("storage/last.txt")
-	_ = CheckErr(err, true)
-	fileScanner = bufio.NewScanner(readFile)
-	fileScanner.Split(bufio.ScanLines)
-	id = 0
-	for fileScanner.Scan() {
-		tmp := strings.TrimSpace(fileScanner.Text()) // remove spaces just in case
-		lastname := firstname{id, tmp}               // create a firstname struct
-		sql := InsertIntoTable("lastname", lastname) // create the sql statement
-		statement, err := db.Prepare(sql)
-		_ = CheckErr(err, true)
-		_, err = statement.Exec()
-		_ = CheckErr(err, true)
-		id++
-	}
-	readFile.Close()
-
-	fmt.Println("\t\tMale first names frequency.")
-	readFile, err = os.Open("storage/male-new-freq.txt")
-	_ = CheckErr(err, true)
-	fileScanner = bufio.NewScanner(readFile)
-	fileScanner.Split(bufio.ScanLines)
-	id = 0
+	id := 0
 	for fileScanner.Scan() {
 
 		tmp := strings.TrimSpace(fileScanner.Text()) // remove spaces just in case
@@ -171,58 +102,7 @@ func populateDB() {
 
 	// This needs to be done differently. The file is too big to load into memory.
 	loadSurnamesFromFile()
-	/*
-		fmt.Println("\t\tLastnames frequency.")
-		fmt.Println("\t\t\tGetting total from surnamefreq.txt")
-		readFile, err = os.Open("storage/surnamefreq.txt")
-		_ = CheckErr(err, true)
-		fileScanner = bufio.NewScanner(readFile)
-		fileScanner.Split(bufio.ScanLines)
-		id = 0
-		var totalCount int = 0
-		for fileScanner.Scan() {
-			tmp := strings.TrimSpace(fileScanner.Text()) // remove spaces just in case
-			sraw := strings.Split(tmp, ",")
-			//		fmt.Println(sraw)
-			ti, err := strconv.Atoi(sraw[2]) // Count, need to place in temp var because off error
-			_ = CheckErr(err, true)
-			totalCount += ti // Add to total count
-		}
-		readFile.Close()
-		fmt.Println("\t\t\tdone.")
 
-		readFile, err = os.Open("storage/surnamefreq.txt")
-		_ = CheckErr(err, true)
-		fileScanner = bufio.NewScanner(readFile)
-		fileScanner.Split(bufio.ScanLines)
-		id = 0
-		var lastP float64 = 100.0
-		for fileScanner.Scan() {
-			mnf := ModifiedNameFreq{}
-			tmp := strings.TrimSpace(fileScanner.Text()) // remove spaces just in case
-			sraw := strings.Split(tmp, ",")              // Split it on tabs
-			mnf.ID = id                                  // id
-			mnf.Name = sraw[0]                           // surname
-			tmpcount, err := strconv.Atoi(sraw[2])       // Count
-			_ = CheckErr(err, true)
-			tpercent := float64(tmpcount) / float64(totalCount) // Percentage
-			tpercent *= 100.0
-			mnf.PercentageHigh = lastP   // High percentage
-			mnf.PercentageLow = tpercent // Low percentage
-			lastP = tpercent             // Set lastP to current percentage
-			if lastP < 0.0 {             // If lastP is less than 0.0
-				lastP = 0.0 // Set it to 0.0
-			}
-			sql := InsertIntoTable("lastFreq", mnf) // create the sql statement
-			statement, err := db.Prepare(sql)
-			_ = CheckErr(err, true)
-			_, err = statement.Exec()
-			_ = CheckErr(err, true)
-			id++
-		}
-		readFile.Close()
-		fmt.Println("\t\tdone.")
-	*/
 	o = "COMMIT;\n"
 	beginstatement, err = db.Prepare(o)
 	_ = CheckErr(err, true)
@@ -237,7 +117,6 @@ func populateDB() {
 }
 
 func checkTableCount(table string) int {
-	//fmt.Print("Checking table count: ", table, " : ")
 	err := db.Ping()
 	_ = CheckErr(err, true)
 
@@ -258,7 +137,6 @@ func checkTableCount(table string) int {
 		rows.Scan(&count)
 	}
 	rows.Close()
-	//fmt.Print("Count:", c, "\n")
 	return count
 }
 
@@ -266,8 +144,8 @@ func main() {
 
 	var err error
 
-	var femalFreqCount int
-	var maleFreqCount int
+	//var femalFreqCount int
+	//var maleFreqCount int
 
 	rnd = rand.New(rand.NewSource(time.Now().UnixNano()))
 
@@ -278,6 +156,7 @@ func main() {
 	flag.BoolVar(&doPercent, "p", false, "Use the percentage tables.")
 	flag.IntVar(&nameGenCount, "c", 1, "The number of names to generate.")
 	flag.IntVar(&surnameLimit, "sl", 4000, "The number of surnames to load into the database.\n\t -1=no limit.\n")
+	flag.BoolVar(&doMiddleInt, "mi", false, "Generate a middle initial.")
 	flag.Parse()
 
 	// Check if the DB exists. If not, create it.
@@ -292,85 +171,14 @@ func main() {
 	db.Ping()
 	_ = CheckErr(err, true)
 
-	sql := "SELECT name FROM sqlite_master WHERE type='table' AND name='firstnamefemale';"
-	statement, err := db.Prepare(sql)
-	_ = CheckErr(err, true)
-	rows, err := statement.Query()
-	_ = CheckErr(err, true)
-	var rc int
-	var tmpstring string
-	for rows.Next() {
-		rc++
-		rows.Scan(&tmpstring)
-	}
-	fmt.Printf("female table: %d\n", rc)
-	if rc == 0 {
-		createnewdb = true
-	}
-
-	sql = "SELECT name FROM sqlite_master WHERE type='table' AND name='firstnamemale';"
-	statement, err = db.Prepare(sql)
-	_ = CheckErr(err, true)
-	rows, err = statement.Query()
-	_ = CheckErr(err, true)
-	//var rc int
-	rc = 0
-	for rows.Next() {
-		rc++
-		rows.Scan(&tmpstring)
-	}
-	fmt.Printf("male table: %d\n", rc)
-	if rc == 0 {
-		createnewdb = true
-	}
-
-	sql = "SELECT name FROM sqlite_master WHERE type='table' AND name='lastname';"
-	statement, err = db.Prepare(sql)
-	_ = CheckErr(err, true)
-	rows, err = statement.Query()
-	_ = CheckErr(err, true)
-	//var rc int
-	rc = 0
-	for rows.Next() {
-		rc++
-		rows.Scan(&tmpstring)
-	}
-	fmt.Printf("lastname table: %d\n", rc)
-	if rc == 0 {
-		createnewdb = true
-	}
-
-	sql = "SELECT name FROM sqlite_master WHERE type='table' AND name='femalefreq';"
-	statement, err = db.Prepare(sql)
-	_ = CheckErr(err, true)
-	rows, err = statement.Query()
-	_ = CheckErr(err, true)
-	//var rc int
-	//var tmpstring string
-	for rows.Next() {
-		rc++
-		rows.Scan(&tmpstring)
-	}
-	fmt.Printf("female frequency table: %d\n", rc)
-	if rc == 0 {
-		createnewdb = true
-	}
-
-	sql = "SELECT name FROM sqlite_master WHERE type='table' AND name='malefreq';"
-	statement, err = db.Prepare(sql)
-	_ = CheckErr(err, true)
-	rows, err = statement.Query()
-	_ = CheckErr(err, true)
-	//var rc int
-	//var tmpstring string
-	for rows.Next() {
-		rc++
-		rows.Scan(&tmpstring)
-	}
-	fmt.Printf("male frequency table: %d\n", rc)
-	if rc == 0 {
-		createnewdb = true
-	}
+	// Check to see if all the table exists. If not, create new db. Should really only create
+	// the tables that are missing. Maybe later.
+	checkIfTableExists("firstnamefemale")
+	checkIfTableExists("firstnamemale")
+	checkIfTableExists("lastname")
+	checkIfTableExists("femalefreq")
+	checkIfTableExists("malefreq")
+	checkIfTableExists("surnames")
 
 	if createnewdb {
 		fmt.Println("Creating a new database tables.")
@@ -394,23 +202,28 @@ func main() {
 	maleCount = checkTableCount("firstnamemale")
 	femaleCount = checkTableCount("firstnamefemale")
 	lastNameCount = checkTableCount("lastname")
-	femalFreqCount = checkTableCount("femalefreq")
-	maleFreqCount = checkTableCount("malefreq")
+	// femalFreqCount = checkTableCount("femalefreq")
+	// maleFreqCount = checkTableCount("malefreq")
 
-	fmt.Printf("femaleCount: %d\n", femaleCount)
-	fmt.Printf("maleCount: %d\n", maleCount)
-	fmt.Printf("lastNameCount: %d\n\n", lastNameCount)
-	fmt.Printf("femaleFreqCount: %d\n", femalFreqCount)
-	fmt.Printf("maleFreqCount: %d\n\n", maleFreqCount)
+	middleInt = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+
+	/*
+		// This isnt really needed anymore.
+		fmt.Printf("femaleCount: %d\n", femaleCount)
+		fmt.Printf("maleCount: %d\n", maleCount)
+		fmt.Printf("lastNameCount: %d\n\n", lastNameCount)
+		fmt.Printf("femaleFreqCount: %d\n", femalFreqCount)
+		fmt.Printf("maleFreqCount: %d\n\n", maleFreqCount)
+	*/
 
 	// Load db into memory
 	fmt.Println("Loading database into memory.")
 
 	fm := nameFreq{}
 	sqlfemale := "select * from femalefreq;"
-	statement, err = db.Prepare(sqlfemale)
+	statement, err := db.Prepare(sqlfemale)
 	_ = CheckErr(err, true)
-	rows, err = statement.Query()
+	rows, err := statement.Query()
 	_ = CheckErr(err, true)
 	var lastP float64 = 100.0
 	for rows.Next() {
@@ -430,13 +243,6 @@ func main() {
 	}
 	rows.Close()
 	statement.Close()
-
-	/*
-		fmt.Println("femaleNamesFreq")
-		for j, k := range femaleNamesFreq {
-			fmt.Println(j, k)
-		}
-	*/
 
 	fmm := nameFreq{}
 	sqlmale := "select * from malefreq;"
@@ -487,17 +293,12 @@ func main() {
 	rows.Close()
 	statement.Close()
 
-	/*	fmt.Println("surnamesFreq")
-		for j, k := range surnameFreq {
-			fmt.Println(j, k)
-		}
-	*/
-
 	fmt.Println("Done.")
 
 	for i := 0; i < nameGenCount; i++ {
-		var firstName string
-		var lastName string
+		var firstName string = ""
+		var lastName string = ""
+		var middleInitial string = ""
 
 		if doPercent {
 			firstName = getPercentName()
@@ -517,6 +318,15 @@ func main() {
 
 		if doLastName {
 			lastName = getLastname()
+		}
+
+		if doMiddleInt {
+			rn := rnd.Intn(26)
+			middleInitial = middleInt[rn : rn+1]
+		}
+
+		if (doMale || doFemale) && doLastName && doMiddleInt {
+			fmt.Printf("%s %s. %s\n", firstName, middleInitial, lastName)
 		}
 
 		if (doMale || doFemale) && doLastName {

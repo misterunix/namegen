@@ -47,7 +47,7 @@ func getMaleFirstname() string {
 	}
 	rows.Close()
 	statement.Close()
-	name = strings.ToUpper(name)
+	name = strings.TrimSpace(strings.ToUpper(name))
 	return name
 }
 
@@ -64,6 +64,6 @@ func getFemaleFirstname() string {
 	}
 	rows.Close()
 	statement.Close()
-	name = strings.ToUpper(name)
+	name = strings.TrimSpace(strings.ToUpper(name))
 	return name
 }
