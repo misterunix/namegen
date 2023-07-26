@@ -143,7 +143,7 @@ func checkTableCount(table string) int {
 func main() {
 
 	var err error
-
+	var webserver bool
 	//var femalFreqCount int
 	//var maleFreqCount int
 
@@ -157,9 +157,8 @@ func main() {
 	flag.IntVar(&nameGenCount, "c", 1, "The number of names to generate.")
 	flag.IntVar(&surnameLimit, "sl", 4000, "The number of surnames to load into the database.\n\t -1=no limit.\n")
 	flag.BoolVar(&doMiddleInt, "mi", false, "Generate a middle initial.")
+	flag.BoolVar(&webserver, "w", false, "Start the webserver.")
 	flag.Parse()
-
-	startWebServer()
 
 	// Check if the DB exists. If not, create it.
 	if !fileExists("db/names.db") {
@@ -296,6 +295,11 @@ func main() {
 	statement.Close()
 
 	fmt.Println("Done.")
+
+	if webserver {
+		startWebServer()
+		os.Exit(0)
+	}
 
 	for i := 0; i < nameGenCount; i++ {
 		var firstName string = ""
